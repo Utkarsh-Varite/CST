@@ -37,7 +37,15 @@ export default class ApiClient {
     await this.msal.initialize();
 
     // If you ever switch to loginRedirect, this will complete the redirect flow.
-    const redirectResult = await this.msal.handleRedirectPromise();
+    let redirectResult: AuthenticationResult | null = null;
+    try {
+      redirectResult = await this.msal.handleRedirectPromise();
+    } catch (err: any) {
+      // Ignore when there is no redirect request cached.
+      if (err?.errorCode !== "no_token_request_cache_error") {
+        throw err;
+      }
+    }
     if (redirectResult?.account) {
       this.msal.setActiveAccount(redirectResult.account);
       return;
